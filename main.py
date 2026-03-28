@@ -2,6 +2,7 @@ import os
 import json
 import re
 import time
+import threading
 import requests
 from flask import Flask, request, jsonify
 
@@ -421,6 +422,22 @@ def send_whatsapp(destination, message):
     return response.status_code, response.text
 
 
+def process_and_send_reply(phone, guest_message):
+    try:
+        reply = get_reply(phone, guest_message)
+        print(f"[OUT] {phone}: {reply}")
+        print(f"[DELAY] Waiting {REPLY_DELAY} seconds before sending")
+
+        if REPLY_DELAY > 0:
+            time.sleep(REPLY_DELAY)
+
+        status, resp = send_whatsapp(phone, reply)
+        print(f"[GUPSHUP] {status}: {resp}")
+
+    except Exception as e:
+        print(f"[BACKGROUND ERROR] {e}")
+
+
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
@@ -436,18 +453,14 @@ def webhook():
 
         print(f"[IN] {phone}: {guest_message}")
 
-        reply = get_reply(phone, guest_message)
+        thread = threading.Thread(
+            target=process_and_send_reply,
+            args=(phone, guest_message),
+            daemon=True
+        )
+        thread.start()
 
-        print(f"[OUT] {phone}: {reply}")
-        print(f"[DELAY] Waiting {REPLY_DELAY} seconds before sending")
-
-        if REPLY_DELAY > 0:
-            time.sleep(REPLY_DELAY)
-
-        status, resp = send_whatsapp(phone, reply)
-        print(f"[GUPSHUP] {status}: {resp}")
-
-        return jsonify({"status": "ok"}), 200
+        return jsonify({"status": "accepted"}), 200
 
     except Exception as e:
         print(f"[ERROR] {e}")
