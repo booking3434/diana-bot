@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import time
 import requests
 from flask import Flask, request, jsonify
 
@@ -12,6 +13,7 @@ GUPSHUP_API_KEY = os.environ.get("GUPSHUP_API_KEY", "4co9llvnblatkzxglfoskvjbp1z
 GUPSHUP_SOURCE = os.environ.get("GUPSHUP_SOURCE", "628158066119")
 OPENAI_MODEL = "gpt-5.4"
 HISTORY_FILE = "history.json"
+REPLY_DELAY = int(os.environ.get("REPLY_DELAY", 30))
 
 SYSTEM_PROMPT = """## CONVERSATION HISTORY
 
@@ -357,7 +359,6 @@ def get_reply(phone, guest_message):
     history = load_history()
     conversation = history.get(phone, [])
 
-    # Build history text for prompt
     history_text = ""
     if conversation:
         history_text = "Conversation so far:\n"
@@ -393,11 +394,8 @@ def get_reply(phone, guest_message):
         raise Exception(f"OpenAI error: {error_msg}")
 
     reply = data["choices"][0]["message"]["content"].strip()
-
-    # Remove <think>...</think> blocks if present
     reply = re.sub(r"<think>.*?</think>", "", reply, flags=re.DOTALL).strip()
 
-    # Save to history
     conversation.append({"guest": guest_message, "diana": reply})
     history[phone] = conversation
     save_history(history)
@@ -428,7 +426,6 @@ def webhook():
     try:
         data = request.json or {}
 
-        # Extract phone and message from Gupshup payload
         payload = data.get("payload", {})
         phone = payload.get("sender", {}).get("phone") or data.get("mobile")
         message_data = payload.get("payload", {})
@@ -439,12 +436,14 @@ def webhook():
 
         print(f"[IN] {phone}: {guest_message}")
 
-        # Get reply from Groq
         reply = get_reply(phone, guest_message)
 
         print(f"[OUT] {phone}: {reply}")
+        print(f"[DELAY] Waiting {REPLY_DELAY} seconds before sending")
 
-        # Send reply via Gupshup
+        if REPLY_DELAY > 0:
+            time.sleep(REPLY_DELAY)
+
         status, resp = send_whatsapp(phone, reply)
         print(f"[GUPSHUP] {status}: {resp}")
 
