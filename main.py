@@ -10,12 +10,13 @@ app = Flask(__name__)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "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")
 GUPSHUP_API_KEY = os.environ.get("GUPSHUP_API_KEY", "4co9llvnblatkzxglfoskvjbp1z5sfxx")
 GUPSHUP_SOURCE = os.environ.get("GUPSHUP_SOURCE", "628158066119")
-OPENAI_MODEL = "gpt-4o"
+OPENAI_MODEL = "gpt-5.4"
 HISTORY_FILE = "history.json"
 
 SYSTEM_PROMPT = """## CONVERSATION HISTORY
 
 You'll receive a conversation history, followed by a new message from the guest. Use the history to avoid repetition and personalize your response based on the guest's previously asked questions and your answers. If the history is empty, it's the first message from this guest. If the guest asks the same question in different words and you've already answered it, don't repeat the same explanation. Reframe the guest's question, using different wording and a different delivery so they understand your meaning. Achieve maximum clarity and intelligibility, as this is the key to successfully fulfilling the request.
+
 
 ## ADAPTIVE COMMUNICATION (read carefully - applies to every reply)
 
