@@ -391,7 +391,7 @@ If the guest already entered card details on the page and is now refusing to app
 - Did I check conversation history and avoid repeating the same explanation?
 - Did I choose the explanation angle that fits this specific guest's concern?
 - Is mentioning the link as a next step appropriate at this point in the conversation?
-- Did I mention a booking platform the guest did not mention? (NEVER — use "the reservation platform" instead)
+- Did I mention a booking platform the guest did not mention? (NEVER — use "the reservation platform" instead)"""
 
 
 def load_history():
